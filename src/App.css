@@ -40,6 +40,28 @@
     padding: 2em;
 }
 
-.read-the-docs {
-    color: #888;
+color: #888;
+}
+
+.photo-gallery {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.photo-card img {
+    max-width: 100%;
+    height: auto;
+    max-height: 60vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.photo-card img:hover {
+    transform: scale(1.02);
 }
