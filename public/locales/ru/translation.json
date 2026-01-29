@@ -1,0 +1,6 @@
+{
+  "title": "ParamGuru",
+  "welcome": "Реализация веб-сайта скоро появится.",
+  "instruction": "Пожалуйста, загрузите свои фотографии в public/assets и CSV-файлы в public/data.",
+  "change_language": "Сменить язык"
+}

@@ -1,0 +1,22 @@
+.language-selector {
+    margin: 1rem 0;
+}
+
+.language-selector select {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+}
+
+/* Dark mode support since we have it in index.css */
+@media (prefers-color-scheme: dark) {
+    .language-selector select {
+        background-color: #333;
+        color: #fff;
+        border-color: #555;
+    }
+}

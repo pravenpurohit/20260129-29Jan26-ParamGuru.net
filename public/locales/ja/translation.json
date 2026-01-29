@@ -1,0 +1,6 @@
+{
+  "title": "ParamGuru",
+  "welcome": "ウェブサイトの実装は近日公開予定です。",
+  "instruction": "写真を public/assets に、CSV ファイルを public/data にアップロードしてください。",
+  "change_language": "言語を変更"
+}

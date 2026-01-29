@@ -1,11 +1,15 @@
-import { useState } from 'react'
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from './components/LanguageSelector';
 import './App.css'
 
 function App() {
+    const { t } = useTranslation();
+
     return (
         <>
             <div className="container">
-                <h1>ParamGuru</h1>
+                <LanguageSelector />
+                <h1>{t('title')}</h1>
                 <div className="photo-gallery">
                     <div className="photo-card">
                         <img
@@ -20,7 +24,8 @@ function App() {
                         />
                     </div>
                 </div>
-                <p>Website implementation coming soon.</p>
+                <p>{t('welcome')}</p>
+                <p>{t('instruction')}</p>
             </div>
         </>
     )

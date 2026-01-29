@@ -1,0 +1,6 @@
+{
+  "title": "ParamGuru",
+  "welcome": "网站实施即将推出。",
+  "instruction": "请将您的照片上传到 public/assets，将 CSV 文件上传到 public/data。",
+  "change_language": "改变语言"
+}
