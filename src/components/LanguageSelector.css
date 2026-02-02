@@ -1,22 +1,189 @@
-.language-selector {
-    margin: 1rem 0;
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    --primary-color: #646cff;
+    --text-color: #ffffff;
+    --hover-bg: rgba(255, 255, 255, 0.15);
 }
 
-.language-selector select {
-    padding: 0.5rem;
-    font-size: 1rem;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    color: #333;
+.language-selector-container {
+    position: relative;
+    display: inline-block;
+    z-index: 1000;
+    font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+.lang-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    color: var(--text-color);
+    font-size: 0.95rem;
     cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 }
 
-/* Dark mode support since we have it in index.css */
-@media (prefers-color-scheme: dark) {
-    .language-selector select {
-        background-color: #333;
-        color: #fff;
-        border-color: #555;
+.lang-toggle-btn:hover,
+.lang-toggle-btn.active {
+    background: var(--hover-bg);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.globe-icon {
+    font-size: 1.1rem;
+}
+
+.arrow-icon {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    transition: transform 0.3s ease;
+}
+
+.lang-toggle-btn.active .arrow-icon {
+    transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.lang-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 50%;
+    /* Center relative to button */
+    transform: translateX(50%);
+    width: 320px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: rgba(30, 30, 35, 0.95);
+    /* Darker solid background for readability */
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.lang-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lang-dropdown::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translate(50%, -10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(50%, 0);
+    }
+}
+
+.group-title {
+    margin: 0.5rem 0 0.5rem 0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.5);
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lang-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Two columns for compactness */
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.lang-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.8rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lang-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateX(2px);
+}
+
+.lang-option.selected {
+    background: var(--primary-color);
+    color: #fff;
+    font-weight: 500;
+}
+
+/* Light Mode Overrides if user is strictly light mode */
+@media (prefers-color-scheme: light) {
+    .lang-dropdown {
+        background: rgba(255, 255, 255, 0.95);
+        color: #333;
+    }
+
+    .group-title {
+        color: rgba(0, 0, 0, 0.5);
+        border-bottom-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .lang-option {
+        color: #444;
+    }
+
+    .lang-option:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: #000;
+    }
+
+    .lang-toggle-btn {
+        color: #333;
+        background: rgba(255, 255, 255, 0.8);
+    }
+
+    .lang-toggle-btn:hover {
+        background: #fff;
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .lang-dropdown {
+        width: 280px;
+        right: 50%;
+        transform: translateX(50%);
+    }
+
+    .lang-grid {
+        grid-template-columns: 1fr;
+        /* Single column on very small screens */
     }
 }

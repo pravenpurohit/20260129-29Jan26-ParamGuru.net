@@ -1,44 +1,147 @@
+
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import './LanguageSelector.css';
 
-const matches = {
-    en: 'English',
-    hi: 'Hindi (हिन्दी)',
-    fr: 'French (Français)',
-    de: 'German (Deutsch)',
-    zh: 'Chinese (中文)',
-    ja: 'Japanese (日本語)',
-    ru: 'Russian (Русский)',
-    bn: 'Bengali (বাংলা)',
-    as: 'Assamese (অসমীয়া)',
-    gu: 'Gujarati (ગુજરાતી)',
-    pa: 'Punjabi (પંજાબી)',
-    or: 'Odia (ଓଡ଼ିଆ)',
-    ta: 'Tamil (தமிழ்)',
-    te: 'Telugu (తెలుగు)',
-    kn: 'Kannada (ಕನ್ನಡ)',
-    ml: 'Malayalam (മലയാളം)',
-    ur: 'Urdu (اردو)',
-    sa: 'Sanskrit (संस्कृतम्)',
-    mni: 'Manipuri (মৈতৈলোন্)'
+const LANGUAGES = {
+    // Indic
+    hi: { label: 'Hindi (हिन्दी)', group: 'Indic' },
+    bn: { label: 'Bengali (বাংলা)', group: 'Indic' },
+    as: { label: 'Assamese (অসমীয়া)', group: 'Indic' },
+    gu: { label: 'Gujarati (ગુજરાતી)', group: 'Indic' },
+    pa: { label: 'Punjabi (પંજાબી)', group: 'Indic' },
+    or: { label: 'Odia (ଓଡ଼ିଆ)', group: 'Indic' },
+    ta: { label: 'Tamil (தமிழ்)', group: 'Indic' },
+    te: { label: 'Telugu (తెలుగు)', group: 'Indic' },
+    kn: { label: 'Kannada (ಕನ್ನಡ)', group: 'Indic' },
+    ml: { label: 'Malayalam (മലയാളം)', group: 'Indic' },
+    ur: { label: 'Urdu (اردو)', group: 'Indic' },
+    sa: { label: 'Sanskrit (संस्कृतम्)', group: 'Indic' },
+    mni: { label: 'Manipuri (মৈতৈলোন্)', group: 'Indic' },
+
+    // Global
+    en: { label: 'English', group: 'Global' },
+    fr: { label: 'French (Français)', group: 'Global' },
+    de: { label: 'German (Deutsch)', group: 'Global' },
+    zh: { label: 'Chinese (中文)', group: 'Global' },
+    ja: { label: 'Japanese (日本語)', group: 'Global' },
+    ru: { label: 'Russian (Русский)', group: 'Global' },
 };
 
 const LanguageSelector = () => {
     const { i18n } = useTranslation();
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
-    const changeLanguage = (event) => {
-        i18n.changeLanguage(event.target.value);
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const sortedLanguages = useMemo(() => {
+        const userLocales = navigator.languages || [navigator.language];
+        const suggested = [];
+        const indic = [];
+        const global = [];
+
+        Object.keys(LANGUAGES).forEach(code => {
+            const langData = { code, ...LANGUAGES[code] };
+
+            // Check if this language is in user's preferred locales
+            // We optimize by checking if the code matches the start of any user locale (e.g. 'en-US' matches 'en')
+            const isSuggested = userLocales.some(locale =>
+                locale.toLowerCase().startsWith(code.toLowerCase())
+            );
+
+            if (isSuggested) {
+                suggested.push(langData);
+            } else if (langData.group === 'Indic') {
+                indic.push(langData);
+            } else {
+                global.push(langData);
+            }
+        });
+
+        // Dedup: If a language is in suggested, don't show it again in other groups?
+        // Actually, seeing it in Suggested is enough.
+
+        return { suggested, indic, global };
+    }, []);
+
+    const changeLanguage = (code) => {
+        i18n.changeLanguage(code);
+        setIsOpen(false);
     };
 
+    const currentLangLabel = LANGUAGES[i18n.language]?.label || 'Select Language';
+
     return (
-        <div className="language-selector">
-            <select onChange={changeLanguage} value={i18n.language} aria-label="Language Selector">
-                {Object.keys(matches).map((key) => (
-                    <option key={key} value={key}>
-                        {matches[key]}
-                    </option>
-                ))}
-            </select>
+        <div className="language-selector-container" ref={dropdownRef}>
+            <button
+                className={`lang-toggle-btn ${isOpen ? 'active' : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label="Change Language"
+                aria-expanded={isOpen}
+            >
+                <span className="globe-icon">🌐</span>
+                <span className="current-lang-label">{currentLangLabel}</span>
+                <span className="arrow-icon">▼</span>
+            </button>
+
+            {isOpen && (
+                <div className="lang-dropdown">
+                    {sortedLanguages.suggested.length > 0 && (
+                        <div className="lang-group">
+                            <h4 className="group-title">Suggested</h4>
+                            {sortedLanguages.suggested.map(lang => (
+                                <button
+                                    key={lang.code}
+                                    className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
+                                    onClick={() => changeLanguage(lang.code)}
+                                >
+                                    {lang.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="lang-group">
+                        <h4 className="group-title">Indian Languages</h4>
+                        <div className="lang-grid">
+                            {sortedLanguages.indic.map(lang => (
+                                <button
+                                    key={lang.code}
+                                    className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
+                                    onClick={() => changeLanguage(lang.code)}
+                                >
+                                    {lang.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="lang-group">
+                        <h4 className="group-title">Global Languages</h4>
+                        <div className="lang-grid">
+                            {sortedLanguages.global.map(lang => (
+                                <button
+                                    key={lang.code}
+                                    className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
+                                    onClick={() => changeLanguage(lang.code)}
+                                >
+                                    {lang.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
