@@ -9,6 +9,18 @@ const matches = {
     zh: 'Chinese (中文)',
     ja: 'Japanese (日本語)',
     ru: 'Russian (Русский)',
+    bn: 'Bengali (বাংলা)',
+    as: 'Assamese (অসমীয়া)',
+    gu: 'Gujarati (ગુજરાતી)',
+    pa: 'Punjabi (પંજાબી)',
+    or: 'Odia (ଓଡ଼ିଆ)',
+    ta: 'Tamil (தமிழ்)',
+    te: 'Telugu (తెలుగు)',
+    kn: 'Kannada (ಕನ್ನಡ)',
+    ml: 'Malayalam (മലയാളം)',
+    ur: 'Urdu (اردو)',
+    sa: 'Sanskrit (संस्कृतम्)',
+    mni: 'Manipuri (মৈতৈলোন্)'
 };
 
 const LanguageSelector = () => {
