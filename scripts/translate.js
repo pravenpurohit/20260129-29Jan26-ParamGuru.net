@@ -17,7 +17,8 @@ const CONFIG = {
     ],
     localesDir: path.join(__dirname, "../public/locales"),
     batchSize: 15,
-    modelName: "gemini-1.5-pro",
+    modelName: "gemini-2.5-pro",
+    fallbackModels: ["gemini-pro-latest", "gemini-2.0-flash"],
     maxRetries: 3,
 };
 
@@ -166,27 +167,46 @@ async function translateBatchWithRetry(batch, targetLang, retries = 0) {
     `;
 
     try {
-        const result = await model.generateContent(prompt);
+        const currentModelName = retries === 0 ? CONFIG.modelName : (CONFIG.fallbackModels[retries - 1] || CONFIG.modelName);
+        console.log(`[${targetLang}] Attempt ${retries + 1}: Using model ${currentModelName}`);
+
+        const currentModel = genAI.getGenerativeModel({
+            model: currentModelName,
+            systemInstruction: model.systemInstruction
+        });
+
+        const result = await currentModel.generateContent(prompt);
         const response = result.response;
         const text = response.text();
         const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
         return JSON.parse(cleanText);
     } catch (error) {
         console.error(`Error translating batch for ${targetLang} (Attempt ${retries + 1}):`, error.message);
-        if (retries < CONFIG.maxRetries) {
-            console.log(`Retrying in ${(retries + 1) * 2} seconds...`);
-            await new Promise(resolve => setTimeout(resolve, (retries + 1) * 2000));
+
+        // Retry with fallback models or same model if we ran out of fallbacks
+        if (retries < (CONFIG.fallbackModels.length + 1)) { // +1 for the primary attempt
+            const delay = (retries + 1) * 2000;
+            console.log(`Retrying in ${delay / 1000} seconds...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
             return translateBatchWithRetry(batch, targetLang, retries + 1);
         }
         return null;
     }
 }
 
+import crypto from "crypto";
+
+// ... (Configuration remains same, inside processLanguage function):
+
 async function processLanguage(targetLang, sourceDataFlat) {
     const targetPath = path.join(CONFIG.localesDir, targetLang, "translation.json");
+    const metaPath = path.join(CONFIG.localesDir, targetLang, "translation.meta.json"); // Store hashes here
+
     let targetData = {};
     let targetDataFlat = {};
+    let metaData = {}; // Format: { "key": "sha256_hash_of_source_value" }
 
+    // Load existing Data
     if (fs.existsSync(targetPath)) {
         try {
             targetData = JSON.parse(fs.readFileSync(targetPath, "utf8"));
@@ -198,55 +218,73 @@ async function processLanguage(targetLang, sourceDataFlat) {
         fs.mkdirSync(path.join(CONFIG.localesDir, targetLang), { recursive: true });
     }
 
+    // Load Meta Data
+    if (fs.existsSync(metaPath)) {
+        try {
+            metaData = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+        } catch (e) { console.warn("Meta file corrupted/missing, rebuilding."); }
+    }
+
+    // Helper: Generate Hash
+    const getHash = (text) => crypto.createHash("sha256").update(text || "").digest("hex");
+
     // 1. Cleanup: Remove Orphan Keys (in Target but not in Source)
     let removedCount = 0;
     Object.keys(targetDataFlat).forEach(key => {
         if (!sourceDataFlat.hasOwnProperty(key)) {
             delete targetDataFlat[key];
+            delete metaData[key];
             removedCount++;
         }
     });
-    if (removedCount > 0) {
-        console.log(`[${targetLang}] Removed ${removedCount} orphan keys.`);
-    }
 
-    // 2. Identify Missing Keys (in Source but not in Target)
-    const missingKeys = [];
+    // 2. Identify Pending Keys (Missing OR Changed)
+    const pendingKeys = [];
+
     Object.keys(sourceDataFlat).forEach(key => {
-        if (!targetDataFlat.hasOwnProperty(key) || targetDataFlat[key] === "") {
-            missingKeys.push(key);
+        const sourceText = sourceDataFlat[key];
+        const sourceHash = getHash(sourceText);
+
+        const isMissing = !targetDataFlat.hasOwnProperty(key);
+        const isChanged = metaData[key] !== sourceHash; // True if hash doesn't match stored hash
+
+        if (isMissing || isChanged) {
+            pendingKeys.push(key);
+            // Log reason for clarity
+            if (isChanged && !isMissing) {
+                console.log(`[${targetLang}] Key '${key}' changed in source. Re-translating.`);
+            }
         }
+
+        // Always update meta to new hash (will be saved at end)
+        metaData[key] = sourceHash;
     });
 
-    if (missingKeys.length === 0 && removedCount === 0) {
+    if (pendingKeys.length === 0 && removedCount === 0) {
         console.log(`[${targetLang}] Up to date.`);
-        // Still, let's sort and write to ensure order
-        const sortedData = sortObjectKeys(unflattenKeys(targetDataFlat));
-        fs.writeFileSync(targetPath, JSON.stringify(sortedData, null, 2));
+        // Ensure meta is synced even if no translations needed (e.g. if we just rebuilt meta)
+        fs.writeFileSync(metaPath, JSON.stringify(metaData, null, 2));
         return;
     }
 
-    console.log(`[${targetLang}] Found ${missingKeys.length} missing keys.`);
+    console.log(`[${targetLang}] Processing ${pendingKeys.length} keys (${removedCount} removed).`);
 
     let newTranslationsFlat = {};
 
-    // 3. Translate Missing Keys in Batches
-    for (let i = 0; i < missingKeys.length; i += CONFIG.batchSize) {
-        const batchKeys = missingKeys.slice(i, i + CONFIG.batchSize);
+    // 3. Translate Pending Keys in Batches
+    for (let i = 0; i < pendingKeys.length; i += CONFIG.batchSize) {
+        const batchKeys = pendingKeys.slice(i, i + CONFIG.batchSize);
         const batchObj = {};
+
         batchKeys.forEach((key) => {
             batchObj[key] = sourceDataFlat[key];
         });
 
         console.log(
-            `[${targetLang}] Translating batch ${Math.floor(i / CONFIG.batchSize) + 1}/${Math.ceil(
-                missingKeys.length / CONFIG.batchSize
-            )}...`
+            `[${targetLang}] Translating batch ${Math.floor(i / CONFIG.batchSize) + 1}/${Math.ceil(pendingKeys.length / CONFIG.batchSize)}...`
         );
 
-        // Unflatten batch for better context in translation
         const batchObjUnflattened = unflattenKeys(batchObj);
-
         const translatedBatch = await translateBatchWithRetry(batchObjUnflattened, targetLang);
 
         if (translatedBatch) {
@@ -254,17 +292,26 @@ async function processLanguage(targetLang, sourceDataFlat) {
             Object.assign(newTranslationsFlat, flatTranslated);
         }
 
-        // Rate limit protection
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    // 4. Merge & Sort
+    // 4. Merge & Save
     Object.assign(targetDataFlat, newTranslationsFlat);
+
+    // Write Translation File
     const finalData = unflattenKeys(targetDataFlat);
     const sortedFinalData = sortObjectKeys(finalData);
-
     fs.writeFileSync(targetPath, JSON.stringify(sortedFinalData, null, 2));
-    console.log(`[${targetLang}] Updated and Sorted.`);
+
+    // Write Meta File (Hashes)
+    // We only keep hashes for keys that exist in the final target data
+    const finalMeta = {};
+    Object.keys(targetDataFlat).forEach(key => {
+        if (metaData[key]) finalMeta[key] = metaData[key];
+    });
+    fs.writeFileSync(metaPath, JSON.stringify(sortObjectKeys(finalMeta), null, 2));
+
+    console.log(`[${targetLang}] Sync Complete.`);
 }
 
 async function main() {

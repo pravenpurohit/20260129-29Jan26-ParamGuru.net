@@ -1,1 +1,0 @@
-/* Place your Page components in this folder */
