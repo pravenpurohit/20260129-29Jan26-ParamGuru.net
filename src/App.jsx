@@ -14,7 +14,12 @@ function App() {
     // AND we use it here to ensure the i18n instance is reactive if needed, 
     // although useTranslation hook inside components handles it mostly.
     const [complexityMode, setComplexityMode] = useState('translation');
-    const { i18n } = useTranslation(complexityMode);
+    const { i18n } = useTranslation();
+
+    // Force global default namespace change so deep components pick it up
+    if (i18n.options.defaultNS !== complexityMode) {
+        i18n.setDefaultNamespace(complexityMode);
+    }
 
     return (
         <HelmetProvider>

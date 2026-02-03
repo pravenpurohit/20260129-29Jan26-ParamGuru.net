@@ -1,6 +1,6 @@
 {
   "change_language": "Choisir la langue",
-  "instruction": "L'amour n'est pas une pratique spirituelle. L'amour est, en lui-même, un état d'union totale et d'absorption. La confiance et la dévotion sont des premières étapes, mais l'amour est un état bien plus élevé, réservé à quelques chanceux. Dans l'amour, celui qui aime et l'objet de son amour deviennent un. À ce stade, il n'y a plus de séparation (dualité) ni même de conscience de l'unité (non-dualité). La pensée s'arrête, l'esprit disparaît. C'est cela qu'on appelle le 'Samadhi'.",
+  "instruction": "L'amour n'est pas une pratique à suivre. L'amour est, en lui-même, un état d'union totale avec le Divin. La foi et la dévotion sont des étapes préliminaires ; l'amour est un état supérieur que seules quelques âmes chanceuses atteignent. Dans l'amour, celui qui aime et celui qui est aimé ne font plus qu'un. Il n'y a plus de séparation, ni même l'idée d'être 'un'. La pensée logique disparaît et l'esprit s'apaise complètement. C'est cet état que l'on appelle 'l'union profonde' ou 'samadhi'.",
   "nav": {
     "home": "Accueil",
     "teachings": "Enseignements"
@@ -8,9 +8,9 @@
   "subtitle": "Ramashram Satsang (Ch. Sh.)",
   "teachings": {
     "description": "Description des enseignements...",
-    "subtitle": "Enseignements (Sous-titre)",
-    "title": "Enseignements (Titre)"
+    "subtitle": "Enseignements (Sous-titre en français)",
+    "title": "Enseignements (Titre en français)"
   },
-  "title": "Le plus grand Guide spirituel",
-  "welcome": "Ce site web est créé avec la bénédiction du grand Guide spirituel Satya Prakash Ji Maharaj. Il est encore en construction et le travail n'est pas terminé."
+  "title": "Le Maître Spirituel",
+  "welcome": "Ce site est créé avec la bénédiction du Maître Spirituel Satya Prakash Ji Maharaj. Il est actuellement en construction et le travail n'est pas encore terminé."
 }

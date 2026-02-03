@@ -1,16 +1,16 @@
 {
   "change_language": "Sélectionner la langue",
-  "instruction": "L'amour n'est point une ascèse ; l'amour est en soi le Samadhi. La foi (Shraddha) et la dévotion (Bhakti) sont des degrés inférieurs ; l'amour est l'état sublime que seuls les bienheureux atteignent. En l'amour, l'amant et l'aimé fusionnent, et là ne subsiste ni dualité, ni même non-dualité. L'intellect s'évanouit, le mental se dissout : tel est ce que l'on nomme le 'Samadhi'.",
+  "instruction": "L'Amour n'est point une discipline spirituelle (*sādhana*). L'Amour est en soi l'union suprême (*samādhi*). La foi (*śraddhā*) et la dévotion (*bhakti*) en sont les échelons inférieurs ; l'Amour est un état sublime que seuls les êtres bénis peuvent atteindre. En l'Amour, l'amant et l'Aimé s'unifient, là où ne subsiste ni dualité, ni non-dualité. L'intellect s'y dissout, la conscience mentale (*citta*) s'évanouit ; cet état est précisément celui que l'on nomme 'samādhi'.",
   "nav": {
-    "home": "Accueil",
-    "teachings": "Enseignements"
+    "home": "Page Principale",
+    "teachings": "Discours Spirituels"
   },
-  "subtitle": "Ramashram Satsang (Ch. Sh.)",
+  "subtitle": "Tradition Spirituelle Ramashram Satsang (Ch. Sh.)",
   "teachings": {
-    "description": "Description des enseignements...",
-    "subtitle": "Enseignements (Sous-titre)",
-    "title": "Enseignements (Titre)"
+    "description": "Exposé des préceptes...",
+    "subtitle": "Discours (Sous-titrage en français)",
+    "title": "Discours (Titre en français)"
   },
-  "title": "Le Maître Suprême",
-  "welcome": "Sous l'égide du Maître Suprême Satya Prakash Ji Maharaj, ce site est en cours de développement. L'œuvre n'est pas encore achevée."
+  "title": "Paramguru (Le Maître Absolu)",
+  "welcome": "Par la grâce et la volonté du Paramguru Satya Prakash Ji Maharaj, ce site internet est en cours de création. Il est présentement en développement et l'œuvre demeure inachevée."
 }

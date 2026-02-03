@@ -7,6 +7,7 @@ This website is spiritual in nature. All technical decisions must align with mai
 *   **Design**: Minimalist, premium, "Glassmorphism", centered, removing clutter.
 *   **Language**: Respect the specific instructions in `PROMPTS.md`.
 *   **Performance**: Zero token waste. Maximum automation.
+*   **Quality**: Before any major milestone, run the protocol defined in `CODE_REVIEW_PROMPT.md`.
 
 ---
 

@@ -1,16 +1,16 @@
 {
-  "change_language": "Sprachauswahl",
-  "instruction": "Die Liebe ist keine spirituelle Praxis; die Liebe selbst ist Samadhi. Glaube und Hingabe sind geringere Stufen; die Liebe ist ein erhabener Zustand, der nur den Begnadeten zuteilwird. In der Liebe verschmelzen der Liebende und das Objekt der Liebe zu Einem, worin weder Zweiheit noch Nicht-Zweiheit existiert. Der Verstand vergeht, der Geist löst sich auf; dies wird ‚Samadhi‘ genannt.",
+  "change_language": "Wahl der Sprache",
+  "instruction": "Die Liebe ist keine spirituelle Praxis. Die Liebe selbst ist Samadhi. Glaube und Hingabe sind niedere Stufen; die Liebe ist ein erhabener Zustand, der nur den wahrhaft Gesegneten zuteilwird. In der Liebe werden der Liebende und der Geliebte zu einer untrennbaren Einheit, in der weder Zweiheit noch Nicht-Zweiheit verbleibt. Der Intellekt löst sich auf, das Gemüt vergeht; ebenjener Zustand wird als 'Samadhi' bezeichnet.",
   "nav": {
-    "home": "Hauptseite",
+    "home": "Hauptportal",
     "teachings": "Die Lehren"
   },
   "subtitle": "Ramashram Satsang (Ch. Sh.)",
   "teachings": {
     "description": "Beschreibung der Lehren...",
-    "subtitle": "Untertitel der Lehren",
-    "title": "Titel der Lehren"
+    "subtitle": "Die Lehren (Deutscher Untertitel)",
+    "title": "Die Lehren (Deutscher Titel)"
   },
-  "title": "Der erhabenste Meister",
-  "welcome": "Auf Geheiß des erhabensten Meisters, Satya Prakash Ji Maharaj, wird diese Webseite errichtet. Sie befindet sich gegenwärtig im Aufbau und die Arbeiten sind noch nicht zum Abschluss gelangt."
+  "title": "Paramguru: Der Höchste Meister",
+  "welcome": "Auf Geheiß des Paramguru Satya Prakash Ji Maharaj wird diese Webpräsenz errichtet. Sie befindet sich gegenwärtig im Aufbau und die Arbeiten sind noch unvollendet."
 }

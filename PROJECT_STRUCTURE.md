@@ -28,6 +28,10 @@ This document provides a comprehensive overview of the Param Guru website codeba
 │   ├── translate.js        # Core Engine: Single-Pass Dual-Output Generator
 │   ├── generate-page.js    # Scaffolding Automation (SEO, Media, Routes)
 │   └── PROMPTS.md          # Externalized Prompts & Rules for Translation
+├── AI_INSTRUCTIONS.md      # Engineer SOP & Workflows
+├── CODE_REVIEW_PROMPT.md   # Automated Quality Assurance Protocol
+├── CONTRIBUTING_AUTHORS.md # Guide for Content Creators
+├── README.md               # Quick Start
 ├── src/
 │   ├── components/
 │   │   ├── common/         # Atomic "Lego" Components
