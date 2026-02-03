@@ -1,7 +1,19 @@
 {
   "change_language": "Choisir la langue",
-  "instruction": "Nous vous invitons à prier Guru Maharaj, afin que ce site web puisse s'accomplir promptement, selon sa sainte volonté.",
+  "instruction": {
+    "high_register": "L'Amour n'est point une ascèse. L'Amour est en soi le Samadhi. La foi (Shraddha) et la dévotion (Bhakti) sont des états inférieurs ; l'Amour est une condition sublime qui n'est accordée qu'aux âmes bénies. En l'Amour, l'amant et le bien-aimé fusionnent en une seule entité, où ne subsistent ni la dualité (Dvaita), ni la non-dualité (Advaita). L'intellect s'évanouit, le mental se dissout ; tel est l'état nommé 'Samadhi'.",
+    "simplified_register": "L'amour n'est pas une pratique spirituelle à accomplir. L'amour est en lui-même un état d'union complète. La foi et la dévotion sont des étapes préliminaires, alors que l'amour est un état supérieur que seuls les plus chanceux peuvent connaître. Dans l'amour, la personne qui aime et l'objet de son amour deviennent un. Il n'y a plus de sentiment de séparation, ni même de sentiment d'unité. La pensée logique s'arrête, l'esprit disparaît : c'est cela que l'on appelle 'Samadhi'."
+  },
+  "nav": {
+    "home": "Accueil",
+    "teachings": "Enseignements"
+  },
   "subtitle": "Ramashram Satsang (Ch. Sh.)",
-  "title": "Param Guru",
-  "welcome": "C'est par la grâce et l'inspiration de Param Guru Satya Prakash Ji Maharaj que ce sanctuaire digital voit le jour. Il est actuellement en cours de création et son œuvre n'est pas encore accomplie."
+  "teachings": {
+    "description": "Description des enseignements...",
+    "subtitle": "Enseignements (Sous-titre)",
+    "title": "Enseignements (Titre)"
+  },
+  "title": "Le Maître Suprême",
+  "welcome": "Ce site web est en cours de développement sous la direction de Param Guru Satya Prakash Ji Maharaj. Il est actuellement en construction. Le travail n'est pas encore terminé."
 }

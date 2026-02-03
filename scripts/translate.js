@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const CONFIG = {
     sourceLang: "hi",
     targetLangs: [
-        "en", "fr", "de", "zh", "ja", "ru",
+        "en", "fr", "de", "zh", "ja", "ru", "hi",
         "bn", "as", "gu", "pa", "or", "ta", "te", "kn", "ml", "ur", "sa", "mni"
     ],
     localesDir: path.join(__dirname, "../public/locales"),
@@ -28,103 +28,71 @@ if (!process.env.GEMINI_API_KEY) {
     process.exit(1);
 }
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// --- Prompt Loader ---
+function loadPrompts() {
+    const promptPath = path.join(__dirname, "PROMPTS.md");
+    if (!fs.existsSync(promptPath)) {
+        console.error("Error: scripts/PROMPTS.md not found.");
+        process.exit(1);
+    }
+    const content = fs.readFileSync(promptPath, "utf8");
+
+    // Extract Sections for Sanitized System Prompt
+    // 1. Core: Start to "2. LANGUAGE MODULES"
+    const coreMatch = content.match(/^[\s\S]*?(?=\n\*\*2\. LANGUAGE MODULES)/);
+    // 2. Verification: "3. MANDATORY VERIFICATION" to "4. OUTPUT FORMAT"
+    const verificationMatch = content.match(/\*\*3\. MANDATORY VERIFICATION[\s\S]*?(?=\n\*\*4\. OUTPUT FORMAT)/);
+    // 3. Chain of Thought: "5. EXAMPLE CHAIN OF THOUGHT" to End
+    const cotMatch = content.match(/### \*\*5\. EXAMPLE CHAIN OF THOUGHT[\s\S]*/);
+
+    const systemPrompt = [
+        coreMatch ? coreMatch[0].trim() : "",
+        "### ---",
+        verificationMatch ? verificationMatch[0].trim() : "",
+        "### ---",
+        cotMatch ? cotMatch[0].trim() : ""
+    ].join('\n\n');
+
+    // Parse Language Instructions
+    const langInstructions = {};
+    const lines = content.split('\n');
+
+    // Regex to match lines like: * **en (English - Philosophical):** Instruction...
+    // or: * **en_simple (English - Simplified B1):** Instruction...
+    const instructionRegex = /^\*\s*\*\*([a-z]{2,3}(?:_simple)?)(?:\s*\(.*?\))?:\*\*\s*(.*)/;
+
+    lines.forEach(line => {
+        const match = line.trim().match(instructionRegex);
+        if (match) {
+            const key = match[1]; // e.g., 'en' or 'en_simple'
+            const instruction = match[2];
+            langInstructions[key] = instruction;
+        }
+    });
+
+    return {
+        system: systemPrompt,
+        languages: langInstructions
+    };
+}
+
+const PROMPTS = loadPrompts();
+
+// Initialize Gemini with Default System Instruction
 const model = genAI.getGenerativeModel({
     model: CONFIG.modelName,
     systemInstruction: {
         role: "system",
-        parts: [
-            {
-                text: `You are a Senior Principal Architect and Computational Linguist specializing in 'Transcreation' of high-context spiritual philosophy.
-Your task is to translate Hindi content into a target language, but NOT literally. You must act as a 'Spiritual Bridge'.
-
-The content is deep Indian spiritual philosophy (Vedanta/Bhakti).
-Literal translations lose the 'bhav' (spiritual emotion).
-You must expand, explain, and contextualize concepts to preserve the depth.
-
-### CULTURAL SAFETY & CONNOTATION CHECK (CRITICAL)
-1.  **Zero Negative Connotation**: You must rigorously verify that your chosen words do NOT have negative connotations in the target culture.
-    *   Avoid terms that sound "cult-like", "superstitious", "primitive", or "dogmatic" to a modern secular or religious native speaker.
-    *   *Example*: For "Guru", avoid "Cult Leader". For "Ritual", ensure it doesn't sound like "Black Magic".
-2.  **Verification Step**: After generating a translation, critique it yourself: "Does this word sound 'off', 'weird', or 'scary' to a regular native speaker of this language?"
-3.  **Fallback Strategy (The 'Tatsama' Rule)**: If you cannot find a purely positive, divine, and respectful word in the target language, you **MUST** use the original Hindi/Sanskrit word (transliterated into the target script) instead.
-    *   *Reason*: It is better to use the original "Tatsama" word (which carries the pure vibration) than a corrupted or misunderstood translated word.
-    *   *Example (in English)*: If "devotion" feels too weak and "worship" feels too ritualistic, use "Bhakti".
-
-### Gold Standard Reference (Few-Shot Examples)
-Analyze how the Hindi concepts are expanded in English below. Apply this same level of depth to all target languages.
-
-input: {
-  "prem_sadna_intro": {
-    "title": "प्रेम साधना (Prem Sadna)",
-    "preface_heading": "प्रस्तावना",
-    "core_philosophy": "प्रेम साधना नहीं है। प्रेम स्वयं समाधि है। श्रद्धा और भक्ति निचली चीजें हैं, प्रेम ऊँची अवस्था है जो भाग्यशालियों को मिल पाती है। प्रेम में प्रेमी और प्रेम पात्र मिल के एक हो जाते हैं, वहाँ न द्वैत रहता है न अद्वैत। बुद्धि खो जाती है, मन लापता हो जाता है, इसी को 'समाधि' कहा जाता है।",
-    "meditation_secret": "जो मन को अन्य क्रियाओं द्वारा निर्विषय कर लेते हैं प्रभुज्ञान से या उस आनन्द से वंचित रह जाते हैं। इसी वास्ते जड़ समाधियों में चाहे वह कई दिन की हो जायें, जागने पर वैसा ही निकलेगा जैसा समाधि के पहिले था। इस वास्ते ईश्वर दर्शन की इच्छा रखने वालों को मन को निर्विषय तो बनाना है परन्तु वह या तो किसी सद्गुरु के ध्यान में उसे निर्विषय बनावें या भगवान के किसी स्वरूप में उसे लय कर दें।",
-    "power_of_satsang": "सन्त ईश्वर के स्वरूप होते हैं। ईश्वर उन्हीं में बोलता है; इसीलिए सन्तों के शब्द हृदय को पकड़ लेते हैं। वह शब्द बालकों के से शब्द होते हैं परन्तु सन्त उनमें एक और वस्तु भर देते हैं। जहाँ सूर्य का प्रकाश हमें संसार का दर्शन कराता है, वहाँ सन्त के शब्दों का प्रकाश हमें ईश्वर दर्शन कराना है - अर्थात् सन्त आत्म-प्रकाश देते हैं। इसलिए सन्तों का संग या सत्संग ही उपासना कहलाती है।",
-    "divine_madness": "जब साधक के हृदय में प्रेम का स्रोत बहने लगता है तब जिज्ञासु उसके साक्षात्कार (दर्शन) के लिये बैचेन हो जाता है। उस समय न उसको क्षुधा रहती है, न प्यास, न निद्रा रहती है, न ज्ञान। दिन रात विरहाग्नि में जलता हुआ बड़-बड़ाया करता है। संसारी लोग ऐसे मनुष्यों को या तो पागल कहते हैं या मदान्ध। वह नहीं जानते कि प्रभु दर्शन के लिए वही अन्तिम द्वार है।",
-    "universal_attraction": "प्रेम में एक आकर्षण है, वही हृदय का सुन्दर खिंचाव है। इसी आकर्षण शक्ति से ही तो सारा ब्रह्माण्ड बँधा हुआ है। सूर्य, चन्द्र, ग्रह, नक्षत्र, जीव, जन्तु सब इस आकर्षण में बँधे हुए हैं। जब इस प्रेम अर्थात् आकर्षण में न्यूनता आ जाती है, तभी यह सब अलग-अलग होकर छिन्न-भिन्न हो जाते हैं।"
-  }
-}
-
-output: {
-  "prem_sadna_intro": {
-    "title": " The Practice of Divine Love",
-    "preface_heading": "Preface",
-    "core_philosophy": "Love is not merely a practice or a discipline; Love is *Samadhi* (divine absorption) itself. While faith and devotion are stepping stones, Love is the exalted state reserved for the fortunate few. In true Love, the lover and the Beloved merge into one, transcending concepts of duality or non-duality. In this state, the intellect dissolves and the mind vanishes—this total immersion is what is truly called 'Samadhi'.",
-    "meditation_secret": "Those who mechanically silence their minds through forced techniques often remain deprived of true Divine Knowledge and Bliss. They may enter a stale stupor for days, but they awake exactly as they were before. Therefore, seekers of God must indeed quiet the mind, but they should do so by merging it into the loving meditation of a *Sadguru* (True Master) or a divine form.",
-    "power_of_satsang": "Saints are the living embodiment of the Divine; it is God who speaks through them. This is why the words of Saints grip the heart. Their words may seem simple, like those of a child, but they are charged with a divine substance. Just as the sun reveals the world to us, the light of a Saint's words reveals God. Thus, *Satsang* (keeping the company of Truth/Saints) is the highest form of worship.",
-    "divine_madness": "When the fountain of Love erupts in the heart, the seeker becomes desperate for a glimpse of the Divine. Hunger, thirst, sleep, and worldly knowledge vanish. Burning day and night in the sacred fire of separation (*Viraha*), they may mutter to themselves. The world may call them mad or intoxicated, not realizing that this 'madness' is the final gateway to God-realization.",
-    "universal_attraction": "Love is the great gravitational force; it is the beautiful pull of the heart. It is this very power of attraction that holds the entire cosmos together. The sun, the moon, the planets, and all living beings are bound by this magnetic force. When this Love—this attraction—diminishes, things fall apart and scatter into chaos."
-  }
-}
-`,
-            },
-        ],
+        parts: [{ text: PROMPTS.system }],
     },
 });
-
-// --- Language Instructions ---
-const LANGUAGE_INSTRUCTIONS = {
-    // English & European
-    en: "Focus on non-biblical, universal spiritual terminology. Use 'Divine' instead of 'God' where appropriate, 'Self' for Atman, and 'Absorption' for Samadhi.",
-    fr: "Use philosophical and mystical French vocabulary (e.g., 'l'Absolu', 'la Félicité'). Ensure the tone is poetic and resonant with French existentialist or mystical literature.",
-    de: "Use vocabulary resonating with German Idealism or Mysticism (Eckhartian depth). Use 'Das Göttliche', 'Erleuchtung', 'Hingabe'. Preserve Capitalization of Nouns.",
-    ru: "Use terms with resonance in Russian religious philosophy/mysticism (Solovyov, Berdyaev) but retain specific Indian terms (Sansara, Dharma) if no perfect equivalent exists. Tone should be soulful ('dushevny').",
-
-    // East Asian
-    zh: "Use Daoist/Buddhist parallels for concepts like Dharma (Fa/Dao) and Karma (Ye), but explicitly clarify the Indian Vedantic context. Do not equate fully if the meaning differs. Use Traditional Chinese characters if appropriate for high culture, or Simplified if standard.",
-    ja: "Use Zen/Buddhist terminology for non-dual concepts (e.g., 'Satori' for realization, but 'Samadhi' is understood). Use polite and reverent forms (Keigo) suitable for spiritual discourse.",
-
-    // South Asian (Indic) - General Rule: Retain Tatsama
-    bn: "Heavily Sanskritized 'Sadhu Bhasha' influence is preferred for spiritual text. Retain Sanskrit terms (Tatsama) like 'Dharma', 'Prem', 'Bhakti' as they carry the vibration better than colloquial Bengali.",
-    as: "Similar to Bengali, use High Assamese with clear Sanskrit roots for spiritual terms. Retain the 'bhav'.",
-    or: "Use Literary Odia. Retain Sanskrit terms widely used in Jagannath culture/Bhakti traditions of Odisha.",
-    gu: "Use the language of Narsi Mehta/Bhakti tradition. Strong emotional resonance. Retain Sanskrit spiritual vocabulary.",
-    pa: "Use Gurmukhi script. Resonance with Gurbani/Sikh spiritual terminology is excellent (e.g., 'Akal', 'Nirankar', 'Bhakti'). Use respectful language.",
-    mr: "Use the language of Sant Tukaram/Varkari tradition. It is deeply emotional and philosophical.",
-
-    // Dravidian - Specific nuances
-    ta: "Use deep literary/Bhakti Tamil (Tevaram/Tiruvacakam style). While Tamil has its own pure spiritual vocabulary, for specific Vedantic terms like 'Samadhi' or 'Atman', retain them if a pure Tamil equivalent loses the specific nuance. Balance 'Senthamizh' with necessary Sanskrit loans.",
-    te: "Telugu spiritual discourse is historically heavily Sanskritized. Maintain this high register. Do not use colloquial Telugu.",
-    kn: "Use the 'Halegannada' or 'Nadugannada' resonance found in Vachana Sahitya if appropriate, or modern high-register Kannada rich in Sanskrit.",
-    ml: "Malayalam has the highest Sanskrit influence. Use this to your advantage to create highly resonant spiritual text (Manipravalam style influence).",
-
-    // Others
-    ur: "CRITICAL: Use high-register, spiritually resonant Urdu vocabulary (Perso-Arabic roots) appropriate for Sufi/Bhakti contexts (e.g., 'Ishq-e-Haqiqi', 'Fana', 'Ma'arifat'). Avoid Hindi/Sanskrit terms if a soulful Urdu equivalent exists.",
-    sa: "Translate into simple, elegant Sanskrit. Use clear Vibhakti. This acts as a 'back-translation' to the source roots.",
-    mni: "Use Meitei Mayek script. Bridge the concepts to Meitei spiritual philosophy (Sanamahi) where parallels exist, but keep Vedantic core intact."
-};
-
 
 // --- Helper Functions ---
 
 function flattenKeys(obj, prefix = "") {
     return Object.keys(obj).reduce((acc, key) => {
         const pre = prefix.length ? prefix + "." : "";
-        if (
-            typeof obj[key] === "object" &&
-            obj[key] !== null &&
-            !Array.isArray(obj[key])
-        ) {
+        if (typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key])) {
             Object.assign(acc, flattenKeys(obj[key], pre + key));
         } else {
             acc[pre + key] = obj[key];
@@ -150,7 +118,6 @@ function unflattenKeys(data) {
     return result;
 }
 
-// Function to recursively sort keys of an object
 function sortObjectKeys(obj) {
     if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
         return obj;
@@ -161,22 +128,27 @@ function sortObjectKeys(obj) {
     }, {});
 }
 
+async function translateBatchWithRetry(batch, targetLang, retries = 0, systemInstruction = null, promptSuffix = "") {
+    // Use default system instruction if not provided
+    const sysInstr = systemInstruction || model.systemInstruction;
 
-async function translateBatchWithRetry(batch, targetLang, retries = 0) {
-    let prompt = `Translate the following Hindi JSON content into ${targetLang}. 
-    Return ONLY valid JSON.
-    
-    Target Language: ${targetLang}
-    
-    TARGET LANGUAGE INSTRUCTIONS (CRITICAL):
-    ${LANGUAGE_INSTRUCTIONS[targetLang] || "Translate with deep spiritual reverence."}
+    // Determine language instruction
+    // Lookup e.g. 'en' or 'en_simple'
+    const instructionKey = promptSuffix === 'SIMPLIFIED_MODE' ? `${targetLang}_simple` : targetLang;
+    const langInstr = PROMPTS.languages[instructionKey] || "Translate with deep spiritual reverence.";
 
-    VERIFICATION STEP:
-    Once you generate the translation, REVIEW it for any negative connotations (e.g., words implying 'cult', 'primitive', 'superstition'). 
-    If a word implies negativity, REPLACE it with the original Hindi word (in ${targetLang} script/transliteration).
+    let prompt = `Transform the following Hindi JSON content into ${targetLang}. Return ONLY valid JSON.
     
+    Target Key: ${instructionKey}
+    
+    SPECIFIC INSTRUCTIONS FOR THIS REGISTER:
+    ${langInstr}
+
     Input JSON:
     ${JSON.stringify(batch, null, 2)}
+    
+    Output Format:
+    Valid JSON matching the input keys.
     `;
 
     try {
@@ -185,7 +157,7 @@ async function translateBatchWithRetry(batch, targetLang, retries = 0) {
 
         const currentModel = genAI.getGenerativeModel({
             model: currentModelName,
-            systemInstruction: model.systemInstruction
+            systemInstruction: sysInstr
         });
 
         const result = await currentModel.generateContent(prompt);
@@ -195,13 +167,10 @@ async function translateBatchWithRetry(batch, targetLang, retries = 0) {
         return JSON.parse(cleanText);
     } catch (error) {
         console.error(`Error translating batch for ${targetLang} (Attempt ${retries + 1}):`, error.message);
-
-        // Retry with fallback models or same model if we ran out of fallbacks
-        if (retries < (CONFIG.fallbackModels.length + 1)) { // +1 for the primary attempt
+        if (retries < (CONFIG.fallbackModels.length + 1)) {
             const delay = (retries + 1) * 2000;
-            console.log(`Retrying in ${delay / 1000} seconds...`);
             await new Promise(resolve => setTimeout(resolve, delay));
-            return translateBatchWithRetry(batch, targetLang, retries + 1);
+            return translateBatchWithRetry(batch, targetLang, retries + 1, sysInstr, promptSuffix);
         }
         return null;
     }
@@ -209,15 +178,19 @@ async function translateBatchWithRetry(batch, targetLang, retries = 0) {
 
 import crypto from "crypto";
 
-// ... (Configuration remains same, inside processLanguage function):
+async function processLanguage(targetLang, sourceDataFlat, namespace = "translation") {
+    // Special Case: Skip Deep Translation for Source Language (Hindi)
+    // We only want to generate Simplified Hindi, not re-translate Deep Hindi to Deep Hindi.
+    if (targetLang === CONFIG.sourceLang && namespace === "translation") {
+        return;
+    }
 
-async function processLanguage(targetLang, sourceDataFlat) {
-    const targetPath = path.join(CONFIG.localesDir, targetLang, "translation.json");
-    const metaPath = path.join(CONFIG.localesDir, targetLang, "translation.meta.json"); // Store hashes here
+    const targetPath = path.join(CONFIG.localesDir, targetLang, `${namespace}.json`);
+    const metaPath = path.join(CONFIG.localesDir, targetLang, `${namespace}.meta.json`);
 
     let targetData = {};
     let targetDataFlat = {};
-    let metaData = {}; // Format: { "key": "sha256_hash_of_source_value" }
+    let metaData = {};
 
     // Load existing Data
     if (fs.existsSync(targetPath)) {
@@ -225,7 +198,7 @@ async function processLanguage(targetLang, sourceDataFlat) {
             targetData = JSON.parse(fs.readFileSync(targetPath, "utf8"));
             targetDataFlat = flattenKeys(targetData);
         } catch (e) {
-            console.warn(`Could not parse existing ${targetLang} file. Starting fresh.`);
+            console.warn(`Could not parse existing ${targetLang}/${namespace} file. Starting fresh.`);
         }
     } else {
         fs.mkdirSync(path.join(CONFIG.localesDir, targetLang), { recursive: true });
@@ -265,7 +238,7 @@ async function processLanguage(targetLang, sourceDataFlat) {
             pendingKeys.push(key);
             // Log reason for clarity
             if (isChanged && !isMissing) {
-                console.log(`[${targetLang}] Key '${key}' changed in source. Re-translating.`);
+                console.log(`[${targetLang}:${namespace}] Key '${key}' changed. Re-translating.`);
             }
         }
 
@@ -274,13 +247,13 @@ async function processLanguage(targetLang, sourceDataFlat) {
     });
 
     if (pendingKeys.length === 0 && removedCount === 0) {
-        console.log(`[${targetLang}] Up to date.`);
+        console.log(`[${targetLang}:${namespace}] Up to date.`);
         // Ensure meta is synced even if no translations needed (e.g. if we just rebuilt meta)
         fs.writeFileSync(metaPath, JSON.stringify(metaData, null, 2));
         return;
     }
 
-    console.log(`[${targetLang}] Processing ${pendingKeys.length} keys (${removedCount} removed).`);
+    console.log(`[${targetLang}:${namespace}] Processing ${pendingKeys.length} keys (${removedCount} removed).`);
 
     let newTranslationsFlat = {};
 
@@ -294,11 +267,24 @@ async function processLanguage(targetLang, sourceDataFlat) {
         });
 
         console.log(
-            `[${targetLang}] Translating batch ${Math.floor(i / CONFIG.batchSize) + 1}/${Math.ceil(pendingKeys.length / CONFIG.batchSize)}...`
+            `[${targetLang}:${namespace}] Batch ${Math.floor(i / CONFIG.batchSize) + 1}/${Math.ceil(pendingKeys.length / CONFIG.batchSize)}...`
         );
 
         const batchObjUnflattened = unflattenKeys(batchObj);
-        const translatedBatch = await translateBatchWithRetry(batchObjUnflattened, targetLang);
+
+        // Determine instructions based on namespace
+        const isSimplified = namespace === "simplified";
+        // The Global System prompt is robust enough. We only need to switch the specific language instruction key.
+        // We pass a flag to the function to help it select the right key.
+        const modeFlag = isSimplified ? "SIMPLIFIED_MODE" : "";
+
+        const translatedBatch = await translateBatchWithRetry(
+            batchObjUnflattened,
+            targetLang,
+            0,
+            null, // Use default model system instruction which contains the master prompt
+            modeFlag
+        );
 
         if (translatedBatch) {
             const flatTranslated = flattenKeys(translatedBatch);
@@ -324,7 +310,7 @@ async function processLanguage(targetLang, sourceDataFlat) {
     });
     fs.writeFileSync(metaPath, JSON.stringify(sortObjectKeys(finalMeta), null, 2));
 
-    console.log(`[${targetLang}] Sync Complete.`);
+    console.log(`[${targetLang}:${namespace}] Sync Complete.`);
 }
 
 async function main() {
@@ -341,8 +327,12 @@ async function main() {
     console.log(`Source Language: ${CONFIG.sourceLang}`);
     console.log(`Total Source Keys: ${Object.keys(sourceDataFlat).length}`);
 
+    // Process All Languages matches in CONFIG.targetLangs (including 'hi')
     for (const lang of CONFIG.targetLangs) {
-        await processLanguage(lang, sourceDataFlat);
+        // Deep Mode
+        await processLanguage(lang, sourceDataFlat, "translation");
+        // Simplified Mode
+        await processLanguage(lang, sourceDataFlat, "simplified");
     }
 
     console.log("Sync Complete!");

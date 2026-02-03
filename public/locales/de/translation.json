@@ -1,7 +1,19 @@
 {
   "change_language": "Sprache wählen",
-  "instruction": "Bitte richten Sie ein Gebet an Guru Maharaj, dass diese Webseite nach Seinem göttlichen Willen bald vollendet werde.",
+  "instruction": {
+    "high_register": "Die Liebe ist keine Sadhana, keine asketische Disziplin. Die Liebe ist das Wesen des Samadhi selbst. Glaube (Shraddha) und Hingabe (Bhakti) sind Vorstufen; die Liebe hingegen ist jener erhabene Zustand, der nur den von Gnade Berührten zuteilwird. In der Liebe verschmelzen der Liebende und das Geliebte zu einer unteilbaren Einheit, in der weder die Zweiheit (Dvaita) noch die Nicht-Zweiheit (Advaita) als Konzepte Bestand haben. Der Intellekt löst sich auf, der Geist (Manas) entschwindet. Dies eben ist es, was als 'Samadhi' bezeichnet wird.",
+    "simplified_register": "Liebe ist nichts, was man üben kann. Liebe ist selbst der Zustand völliger innerer Versenkung und Einheit. Glaube und Hingabe sind wichtige erste Schritte, aber die Liebe ist ein viel höherer Zustand, den nur wenige Glückliche erfahren. In wahrer Liebe gibt es keine Trennung mehr zwischen dem, der liebt, und dem, der geliebt wird – sie werden eins. Alle Konzepte von Trennung oder Einheit lösen sich auf. Der Verstand wird still, das Denken verschwindet. Diesen Zustand nennt man 'Samadhi'."
+  },
+  "nav": {
+    "home": "Startseite",
+    "teachings": "Lehren"
+  },
   "subtitle": "Ramashram Satsang (Ch. Sh.)",
+  "teachings": {
+    "description": "Beschreibung der Lehren...",
+    "subtitle": "Lehren (Deutscher Untertitel)",
+    "title": "Lehren (Deutscher Titel)"
+  },
   "title": "Param Guru",
-  "welcome": "Diese Webseite entsteht auf Geheiß von Param Guru Satya Prakash Ji Maharaj. Sie befindet sich noch im Aufbau und ist noch nicht vollendet."
+  "welcome": "Auf Anweisung von Param Guru Satya Prakash Ji Maharaj wird diese Webseite erstellt. Sie befindet sich noch im Aufbau. Die Arbeiten sind noch nicht abgeschlossen."
 }

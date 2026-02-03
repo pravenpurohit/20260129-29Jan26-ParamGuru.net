@@ -28,7 +28,8 @@ const LANGUAGES = {
     ru: { label: 'Russian (Русский)', group: 'Global' },
 };
 
-const LanguageSelector = () => {
+
+const LanguageSelector = ({ complexityMode, setComplexityMode }) => {
     const { i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -52,9 +53,6 @@ const LanguageSelector = () => {
 
         Object.keys(LANGUAGES).forEach(code => {
             const langData = { code, ...LANGUAGES[code] };
-
-            // Check if this language is in user's preferred locales
-            // We optimize by checking if the code matches the start of any user locale (e.g. 'en-US' matches 'en')
             const isSuggested = userLocales.some(locale =>
                 locale.toLowerCase().startsWith(code.toLowerCase())
             );
@@ -68,9 +66,6 @@ const LanguageSelector = () => {
             }
         });
 
-        // Dedup: If a language is in suggested, don't show it again in other groups?
-        // Actually, seeing it in Suggested is enough.
-
         return { suggested, indic, global };
     }, []);
 
@@ -82,66 +77,89 @@ const LanguageSelector = () => {
     const currentLangLabel = LANGUAGES[i18n.language]?.label || 'Select Language';
 
     return (
-        <div className="language-selector-container" ref={dropdownRef}>
-            <button
-                className={`lang-toggle-btn ${isOpen ? 'active' : ''}`}
-                onClick={() => setIsOpen(!isOpen)}
-                aria-label="Change Language"
-                aria-expanded={isOpen}
-            >
-                <span className="globe-icon">🌐</span>
-                <span className="current-lang-label">{currentLangLabel}</span>
-                <span className="arrow-icon">▼</span>
-            </button>
+        <div className="language-selector-wrapper">
 
-            {isOpen && (
-                <div className="lang-dropdown">
-                    {sortedLanguages.suggested.length > 0 && (
+            {/* Mode Segmented Control */}
+            <div className="mode-segmented-control">
+                <button
+                    onClick={() => setComplexityMode('translation')}
+                    className={`mode-btn ${complexityMode === 'translation' ? 'active' : ''}`}
+                >
+                    <span>🕉️</span>
+                    <span>Original Spiritual</span>
+                </button>
+
+                <button
+                    onClick={() => setComplexityMode('simplified')}
+                    className={`mode-btn ${complexityMode === 'simplified' ? 'active' : ''}`}
+                >
+                    <span>😊</span>
+                    <span>Simplified</span>
+                </button>
+            </div>
+
+            {/* Language Dropdown */}
+            <div className="language-selector-container" ref={dropdownRef}>
+                <button
+                    className={`lang-toggle-btn ${isOpen ? 'active' : ''}`}
+                    onClick={() => setIsOpen(!isOpen)}
+                    aria-label="Change Language"
+                    aria-expanded={isOpen}
+                >
+                    <span className="globe-icon">🌐</span>
+                    <span className="current-lang-label">{currentLangLabel}</span>
+                    <span className="arrow-icon">▼</span>
+                </button>
+
+                {isOpen && (
+                    <div className="lang-dropdown">
+                        {sortedLanguages.suggested.length > 0 && (
+                            <div className="lang-group">
+                                <h4 className="group-title">Suggested</h4>
+                                {sortedLanguages.suggested.map(lang => (
+                                    <button
+                                        key={lang.code}
+                                        className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
+                                        onClick={() => changeLanguage(lang.code)}
+                                    >
+                                        {lang.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         <div className="lang-group">
-                            <h4 className="group-title">Suggested</h4>
-                            {sortedLanguages.suggested.map(lang => (
-                                <button
-                                    key={lang.code}
-                                    className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
-                                    onClick={() => changeLanguage(lang.code)}
-                                >
-                                    {lang.label}
-                                </button>
-                            ))}
+                            <h4 className="group-title">Indian Languages</h4>
+                            <div className="lang-grid">
+                                {sortedLanguages.indic.map(lang => (
+                                    <button
+                                        key={lang.code}
+                                        className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
+                                        onClick={() => changeLanguage(lang.code)}
+                                    >
+                                        {lang.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    )}
 
-                    <div className="lang-group">
-                        <h4 className="group-title">Indian Languages</h4>
-                        <div className="lang-grid">
-                            {sortedLanguages.indic.map(lang => (
-                                <button
-                                    key={lang.code}
-                                    className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
-                                    onClick={() => changeLanguage(lang.code)}
-                                >
-                                    {lang.label}
-                                </button>
-                            ))}
+                        <div className="lang-group">
+                            <h4 className="group-title">Global Languages</h4>
+                            <div className="lang-grid">
+                                {sortedLanguages.global.map(lang => (
+                                    <button
+                                        key={lang.code}
+                                        className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
+                                        onClick={() => changeLanguage(lang.code)}
+                                    >
+                                        {lang.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
-
-                    <div className="lang-group">
-                        <h4 className="group-title">Global Languages</h4>
-                        <div className="lang-grid">
-                            {sortedLanguages.global.map(lang => (
-                                <button
-                                    key={lang.code}
-                                    className={`lang-option ${i18n.language === lang.code ? 'selected' : ''}`}
-                                    onClick={() => changeLanguage(lang.code)}
-                                >
-                                    {lang.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

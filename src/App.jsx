@@ -1,36 +1,39 @@
+import { useState } from 'react';
+import { HelmetProvider } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import LanguageSelector from './components/LanguageSelector';
-import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import './App.css';
 
+import { ROUTES } from './config/routes';
 
 function App() {
-    const { t } = useTranslation();
+    // Lifted state for complexity mode to App level (though Layout handles UI)
+    // We pass it to Layout so the LanguageSelector inside it can control it.
+    // AND we use it here to ensure the i18n instance is reactive if needed, 
+    // although useTranslation hook inside components handles it mostly.
+    const [complexityMode, setComplexityMode] = useState('translation');
+    const { i18n } = useTranslation(complexityMode);
 
     return (
-        <>
-            <div className="container">
-                <LanguageSelector />
-                <h1>{t('title')}</h1>
-                <p className="subtitle">{t('subtitle')}</p>
-                <div className="photo-gallery">
-                    <div className="photo-card">
-                        <img
-                            src="/assets/2017_Pitaji_Photo_Final_NoLayers_24x36_300dpi_DateCorrected.jpg"
-                            alt="Pitaji Photo"
+        <HelmetProvider>
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/" element={
+                        <Layout
+                            complexityMode={complexityMode}
+                            setComplexityMode={setComplexityMode}
                         />
-                    </div>
-                    <div className="photo-card">
-                        <img
-                            src="/assets/PapajiPrasad_2017_12x18_600dpi.jpg"
-                            alt="Papaji Prasad Photo"
-                        />
-                    </div>
-                </div>
-                <p>{t('welcome')}</p>
-                <p>{t('instruction')}</p>
-            </div>
-        </>
-    )
+                    }>
+                        {ROUTES.map(route => (
+                            <Route key={route.key} path={route.path} element={route.element} index={route.path === '/'} />
+                        ))}
+                    </Route>
+                </Routes>
+            </BrowserRouter>
+        </HelmetProvider>
+    );
 }
 
-export default App
+export default App;

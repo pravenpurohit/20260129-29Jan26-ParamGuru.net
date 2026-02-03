@@ -3,9 +3,28 @@
   line-height: 1.5;
   font-weight: 400;
 
+  /* Color System */
+  --color-bg: #242424;
+  --color-text: rgba(255, 255, 255, 0.87);
+  --color-card-bg: rgba(255, 255, 255, 0.05);
+  --color-primary: #646cff;
+  --color-primary-hover: #535bf2;
+  --color-border: rgba(255, 255, 255, 0.2);
+
+  /* Spacing */
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 4rem;
+
+  /* Typography */
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 3.2rem;
+
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--color-text);
+  background-color: var(--color-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -37,9 +56,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -50,6 +71,7 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   button {
     background-color: #f9f9f9;
   }
