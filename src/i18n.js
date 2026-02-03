@@ -15,7 +15,11 @@ i18n
             escapeValue: false, // not needed for react as it escapes by default
         },
         backend: {
-            loadPath: '/locales/{{lng}}/{{ns}}.json?v=' + new Date().getTime(),
+            loadPath: () => {
+                const timestamp = new Date().getTime();
+                console.log('Context: i18n loading with timestamp:', timestamp);
+                return `/locales/{{lng}}/{{ns}}.json?v=${timestamp}`;
+            },
         },
     });
 
