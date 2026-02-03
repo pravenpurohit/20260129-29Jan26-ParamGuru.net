@@ -17,6 +17,11 @@ You must aggressively hunt for bugs where the **UI updates** but the **Logic rem
 *   **The Trap**: Child components use hooks like `useTranslation()` without arguments, assuming they will "just know" the new context.
 *   **The Check**: Verify that the Context Provider (or Global Instance) being accessed by the child is actually receiving the update from the parent.
 
+### 3. Force Re-render / Remount Necessity (The "Stale Component" Trap)
+*   **The Trap**: Changing a global setting (like Default Namespace, Theme, or Language) that components might read *only on mount* or via non-reactive singletons.
+*   **The Check**: Does this state change require the component tree to be destroyed and recreated to pick up the new config?
+    *   *Fix*: Look for `key={mode}` on the Layout or Root component to force a hard remount.
+
 ---
 
 ## 🔍 I18N & Internationalization Specifics

@@ -27,6 +27,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={
                         <Layout
+                            key={complexityMode}
                             complexityMode={complexityMode}
                             setComplexityMode={setComplexityMode}
                         />
