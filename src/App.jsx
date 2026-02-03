@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSelector from './components/LanguageSelector';
 import './App.css'
 
+
 function App() {
     const { t } = useTranslation();
 
@@ -10,6 +11,7 @@ function App() {
             <div className="container">
                 <LanguageSelector />
                 <h1>{t('title')}</h1>
+                <p className="subtitle">{t('subtitle')}</p>
                 <div className="photo-gallery">
                     <div className="photo-card">
                         <img

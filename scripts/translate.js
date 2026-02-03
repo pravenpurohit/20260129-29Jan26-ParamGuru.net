@@ -41,6 +41,15 @@ The content is deep Indian spiritual philosophy (Vedanta/Bhakti).
 Literal translations lose the 'bhav' (spiritual emotion).
 You must expand, explain, and contextualize concepts to preserve the depth.
 
+### CULTURAL SAFETY & CONNOTATION CHECK (CRITICAL)
+1.  **Zero Negative Connotation**: You must rigorously verify that your chosen words do NOT have negative connotations in the target culture.
+    *   Avoid terms that sound "cult-like", "superstitious", "primitive", or "dogmatic" to a modern secular or religious native speaker.
+    *   *Example*: For "Guru", avoid "Cult Leader". For "Ritual", ensure it doesn't sound like "Black Magic".
+2.  **Verification Step**: After generating a translation, critique it yourself: "Does this word sound 'off', 'weird', or 'scary' to a regular native speaker of this language?"
+3.  **Fallback Strategy (The 'Tatsama' Rule)**: If you cannot find a purely positive, divine, and respectful word in the target language, you **MUST** use the original Hindi/Sanskrit word (transliterated into the target script) instead.
+    *   *Reason*: It is better to use the original "Tatsama" word (which carries the pure vibration) than a corrupted or misunderstood translated word.
+    *   *Example (in English)*: If "devotion" feels too weak and "worship" feels too ritualistic, use "Bhakti".
+
 ### Gold Standard Reference (Few-Shot Examples)
 Analyze how the Hindi concepts are expanded in English below. Apply this same level of depth to all target languages.
 
@@ -161,6 +170,10 @@ async function translateBatchWithRetry(batch, targetLang, retries = 0) {
     
     TARGET LANGUAGE INSTRUCTIONS (CRITICAL):
     ${LANGUAGE_INSTRUCTIONS[targetLang] || "Translate with deep spiritual reverence."}
+
+    VERIFICATION STEP:
+    Once you generate the translation, REVIEW it for any negative connotations (e.g., words implying 'cult', 'primitive', 'superstition'). 
+    If a word implies negativity, REPLACE it with the original Hindi word (in ${targetLang} script/transliteration).
     
     Input JSON:
     ${JSON.stringify(batch, null, 2)}

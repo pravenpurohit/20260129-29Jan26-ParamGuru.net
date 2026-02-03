@@ -80,3 +80,11 @@
 .photo-card img:hover {
     transform: scale(1.02);
 }
+/* Subtitle Style */
+.subtitle {
+    font-size: 1rem;
+    color: #cccccc;
+    margin-top: -10px;
+    margin-bottom: 20px;
+    font-weight: 300;
+}
