@@ -98,22 +98,17 @@ Before generating the final JSON, you must internally perform this **Safety Audi
 
 **4. OUTPUT FORMAT (JSON)**
 
-Output **ONLY** valid JSON.
+Output **ONLY** a valid JSON object matching the input keys. For each key, provide an object with `high` and `simple` fields.
 
 ```json
 {
-  "meta": {
-    "source_language": "Hindi",
-    "content_type": "Spiritual/Philosophical",
-    "safety_audit_passed": true
+  "key1": {
+    "high": "Transcreated text in High Register...",
+    "simple": "Transcreated text in Simplified Register..."
   },
-  "translations": {
-    "en": "...",
-    "en_simple": "...",
-    "hi": "...",
-    "hi_simple": "...",
-    "ur": "...",
-    "ur_simple": "..."
+  "key2": {
+    "high": "...",
+    "simple": "..."
   }
 }
 ```

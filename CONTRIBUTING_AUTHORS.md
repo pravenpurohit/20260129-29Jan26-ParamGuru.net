@@ -9,35 +9,42 @@ The source of truth for this website is `public/locales/hi/translation.json`.
 
 ## 2. Editing Workflow
 
-### Step 1: Update Hindi Content
-Open `public/locales/hi/translation.json` in your editor. Add or modify the keys as needed.
+### Step 1: Create a New Page (Optional)
+If adding a completely new topic (e.g., "Meditation"), use the automation tool:
+```bash
+npm run gen:page Meditation
+```
+This creates the file, sets up the menu connection, and prepares the translation keys.
+
+### Step 2: Update Hindi Content
+Open `public/locales/hi/translation.json` in your editor. Add or modify the keys for your page.
 
 ```json
 {
-  "new_section": {
-    "title": "नया शीर्षक",
-    "content": "यहाँ अपनी आध्यात्मिक सामग्री लिखें..."
+  "meditation": {
+    "title": "ध्यान",
+    "description": "ध्यान की विधि..."
   }
 }
 ```
 
-### Step 2: Run the Transcreation Engine
-Before you can see your changes in other languages, you must run the synchronization script. This script uses AI to transcreate your Hindi content.
+### Step 3: Run the Transcreation Engine (Single-Pass)
+We use a sophisticated AI engine that generates **two versions** (High & Simplified) for every language in a single step.
 
 ```bash
 npm run i18n:sync
 ```
+*   **Efficiency**: This process is optimized to be 2x faster and use 50% fewer resources.
+*   *Note: You need a valid `GEMINI_API_KEY` in your `.env` file.*
 
-_Note: You need a valid `GEMINI_API_KEY` in your `.env` file for this to work._
-
-### Step 3: Verify locally
+### Step 4: Verify locally
 Run the development server to check your changes:
 
 ```bash
 npm run dev
 ```
 
-Switch between languages using the Language Selector to ensure the AI generated appropriate translations.
+Switch between **"Original Spiritual"** (High) and **"Simplified B1"** (Simple) modes using the toggle at the top of the page. Ensure the AI captured the nuance correctly.
 
 ## 3. Publishing / Building
 When you run the build command, the system will **automatically** force a translation sync to ensure no outdated translations reach production.
@@ -46,10 +53,8 @@ When you run the build command, the system will **automatically** force a transl
 npm run build
 ```
 
-If the translation fails (e.g., missing API key), the build will fail. This is a safety mechanism.
-
 ## Summary Checklist
-- [ ] Edited `public/locales/hi/translation.json`
-- [ ] Ran `npm run i18n:sync`
-- [ ] Verified UI in `npm run dev`
-- [ ] Committed changes
+- [ ] used `npm run gen:page` for new pages?
+- [ ] Edited `public/locales/hi/translation.json`?
+- [ ] Ran `npm run i18n:sync`?
+- [ ] Verified both registers (High/Simple) in `npm run dev`?

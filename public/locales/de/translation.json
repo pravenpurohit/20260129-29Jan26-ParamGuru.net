@@ -1,19 +1,16 @@
 {
-  "change_language": "Sprache wählen",
-  "instruction": {
-    "high_register": "Die Liebe ist keine Sadhana, keine asketische Disziplin. Die Liebe ist das Wesen des Samadhi selbst. Glaube (Shraddha) und Hingabe (Bhakti) sind Vorstufen; die Liebe hingegen ist jener erhabene Zustand, der nur den von Gnade Berührten zuteilwird. In der Liebe verschmelzen der Liebende und das Geliebte zu einer unteilbaren Einheit, in der weder die Zweiheit (Dvaita) noch die Nicht-Zweiheit (Advaita) als Konzepte Bestand haben. Der Intellekt löst sich auf, der Geist (Manas) entschwindet. Dies eben ist es, was als 'Samadhi' bezeichnet wird.",
-    "simplified_register": "Liebe ist nichts, was man üben kann. Liebe ist selbst der Zustand völliger innerer Versenkung und Einheit. Glaube und Hingabe sind wichtige erste Schritte, aber die Liebe ist ein viel höherer Zustand, den nur wenige Glückliche erfahren. In wahrer Liebe gibt es keine Trennung mehr zwischen dem, der liebt, und dem, der geliebt wird – sie werden eins. Alle Konzepte von Trennung oder Einheit lösen sich auf. Der Verstand wird still, das Denken verschwindet. Diesen Zustand nennt man 'Samadhi'."
-  },
+  "change_language": "Sprachauswahl",
+  "instruction": "Die Liebe ist keine spirituelle Praxis; die Liebe selbst ist Samadhi. Glaube und Hingabe sind geringere Stufen; die Liebe ist ein erhabener Zustand, der nur den Begnadeten zuteilwird. In der Liebe verschmelzen der Liebende und das Objekt der Liebe zu Einem, worin weder Zweiheit noch Nicht-Zweiheit existiert. Der Verstand vergeht, der Geist löst sich auf; dies wird ‚Samadhi‘ genannt.",
   "nav": {
-    "home": "Startseite",
-    "teachings": "Lehren"
+    "home": "Hauptseite",
+    "teachings": "Die Lehren"
   },
   "subtitle": "Ramashram Satsang (Ch. Sh.)",
   "teachings": {
     "description": "Beschreibung der Lehren...",
-    "subtitle": "Lehren (Deutscher Untertitel)",
-    "title": "Lehren (Deutscher Titel)"
+    "subtitle": "Untertitel der Lehren",
+    "title": "Titel der Lehren"
   },
-  "title": "Param Guru",
-  "welcome": "Auf Anweisung von Param Guru Satya Prakash Ji Maharaj wird diese Webseite erstellt. Sie befindet sich noch im Aufbau. Die Arbeiten sind noch nicht abgeschlossen."
+  "title": "Der erhabenste Meister",
+  "welcome": "Auf Geheiß des erhabensten Meisters, Satya Prakash Ji Maharaj, wird diese Webseite errichtet. Sie befindet sich gegenwärtig im Aufbau und die Arbeiten sind noch nicht zum Abschluss gelangt."
 }

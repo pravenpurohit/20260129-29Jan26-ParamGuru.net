@@ -4,11 +4,12 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configuration
+// --- Configuration ---
 const CONFIG = {
     sourceLang: "hi",
     targetLangs: [
@@ -22,12 +23,13 @@ const CONFIG = {
     maxRetries: 3,
 };
 
-// Initialize Gemini
+// --- Initialization ---
 if (!process.env.GEMINI_API_KEY) {
     console.error("Error: GEMINI_API_KEY environment variable is not set.");
     process.exit(1);
 }
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 // --- Prompt Loader ---
 function loadPrompts() {
     const promptPath = path.join(__dirname, "PROMPTS.md");
@@ -56,15 +58,12 @@ function loadPrompts() {
     // Parse Language Instructions
     const langInstructions = {};
     const lines = content.split('\n');
-
-    // Regex to match lines like: * **en (English - Philosophical):** Instruction...
-    // or: * **en_simple (English - Simplified B1):** Instruction...
     const instructionRegex = /^\*\s*\*\*([a-z]{2,3}(?:_simple)?)(?:\s*\(.*?\))?:\*\*\s*(.*)/;
 
     lines.forEach(line => {
         const match = line.trim().match(instructionRegex);
         if (match) {
-            const key = match[1]; // e.g., 'en' or 'en_simple'
+            const key = match[1];
             const instruction = match[2];
             langInstructions[key] = instruction;
         }
@@ -78,7 +77,7 @@ function loadPrompts() {
 
 const PROMPTS = loadPrompts();
 
-// Initialize Gemini with Default System Instruction
+// Initialize Model
 const model = genAI.getGenerativeModel({
     model: CONFIG.modelName,
     systemInstruction: {
@@ -87,8 +86,7 @@ const model = genAI.getGenerativeModel({
     },
 });
 
-// --- Helper Functions ---
-
+// --- Helpers ---
 function flattenKeys(obj, prefix = "") {
     return Object.keys(obj).reduce((acc, key) => {
         const pre = prefix.length ? prefix + "." : "";
@@ -128,27 +126,31 @@ function sortObjectKeys(obj) {
     }, {});
 }
 
-async function translateBatchWithRetry(batch, targetLang, retries = 0, systemInstruction = null, promptSuffix = "") {
-    // Use default system instruction if not provided
-    const sysInstr = systemInstruction || model.systemInstruction;
+function getHash(text) {
+    return crypto.createHash("sha256").update(text || "").digest("hex");
+}
 
-    // Determine language instruction
-    // Lookup e.g. 'en' or 'en_simple'
-    const instructionKey = promptSuffix === 'SIMPLIFIED_MODE' ? `${targetLang}_simple` : targetLang;
-    const langInstr = PROMPTS.languages[instructionKey] || "Translate with deep spiritual reverence.";
+// --- Translation Function ---
+async function translateBatchWithRetry(batch, targetLang, retries = 0) {
+    // Construct Prompt with Dual Instructions
+    const highKey = targetLang;
+    const simpleKey = `${targetLang}_simple`;
 
-    let prompt = `Transform the following Hindi JSON content into ${targetLang}. Return ONLY valid JSON.
+    // Fallback if key missing (e.g. for regional languages if not explicit)
+    const highInstr = PROMPTS.languages[highKey] || "Translate with deep spiritual reverence.";
+    const simpleInstr = PROMPTS.languages[simpleKey] || "Translate into plain, common language (B1 Level).";
+
+    const prompt = `Transform the following Hindi JSON content into ${targetLang}. 
     
-    Target Key: ${instructionKey}
-    
-    SPECIFIC INSTRUCTIONS FOR THIS REGISTER:
-    ${langInstr}
+    You must provide TWO versions for every key:
+    1. 'high': ${highInstr}
+    2. 'simple': ${simpleInstr}
 
     Input JSON:
     ${JSON.stringify(batch, null, 2)}
     
     Output Format:
-    Valid JSON matching the input keys.
+    Valid JSON where each key maps to an object { "high": "...", "simple": "..." }
     `;
 
     try {
@@ -157,7 +159,7 @@ async function translateBatchWithRetry(batch, targetLang, retries = 0, systemIns
 
         const currentModel = genAI.getGenerativeModel({
             model: currentModelName,
-            systemInstruction: sysInstr
+            systemInstruction: model.systemInstruction
         });
 
         const result = await currentModel.generateContent(prompt);
@@ -170,150 +172,141 @@ async function translateBatchWithRetry(batch, targetLang, retries = 0, systemIns
         if (retries < (CONFIG.fallbackModels.length + 1)) {
             const delay = (retries + 1) * 2000;
             await new Promise(resolve => setTimeout(resolve, delay));
-            return translateBatchWithRetry(batch, targetLang, retries + 1, sysInstr, promptSuffix);
+            return translateBatchWithRetry(batch, targetLang, retries + 1);
         }
         return null;
     }
 }
 
-import crypto from "crypto";
-
-async function processLanguage(targetLang, sourceDataFlat, namespace = "translation") {
-    // Special Case: Skip Deep Translation for Source Language (Hindi)
-    // We only want to generate Simplified Hindi, not re-translate Deep Hindi to Deep Hindi.
-    if (targetLang === CONFIG.sourceLang && namespace === "translation") {
-        return;
+// --- Main Sync Function ---
+async function syncLanguage(targetLang, sourceDataFlat) {
+    if (targetLang === CONFIG.sourceLang) {
+        // For source lang (Hindi), we typically only need 'simplified' generated, 
+        // but to keep logic uniform we can skip 'high' update or just copy source to high.
+        // For now, let's process it normally but usually source->source translation is redundant.
+        // However, 'hi_simple' is valid. The prompt handles 'hi' instruction as 'Tatsama' which matches source.
+        // We will proceed.
     }
 
-    const targetPath = path.join(CONFIG.localesDir, targetLang, `${namespace}.json`);
-    const metaPath = path.join(CONFIG.localesDir, targetLang, `${namespace}.meta.json`);
+    const highPath = path.join(CONFIG.localesDir, targetLang, `translation.json`);
+    const simplePath = path.join(CONFIG.localesDir, targetLang, `simplified.json`);
+    // We share one meta file for the source hash since the source is the same for both
+    const metaPath = path.join(CONFIG.localesDir, targetLang, `meta.json`);
 
-    let targetData = {};
-    let targetDataFlat = {};
+    // Load Existing Data
+    let highData = {};
+    let simpleData = {};
     let metaData = {};
 
-    // Load existing Data
-    if (fs.existsSync(targetPath)) {
-        try {
-            targetData = JSON.parse(fs.readFileSync(targetPath, "utf8"));
-            targetDataFlat = flattenKeys(targetData);
-        } catch (e) {
-            console.warn(`Could not parse existing ${targetLang}/${namespace} file. Starting fresh.`);
-        }
-    } else {
-        fs.mkdirSync(path.join(CONFIG.localesDir, targetLang), { recursive: true });
-    }
+    try { highData = fs.existsSync(highPath) ? JSON.parse(fs.readFileSync(highPath, 'utf8')) : {}; } catch (e) { }
+    try { simpleData = fs.existsSync(simplePath) ? JSON.parse(fs.readFileSync(simplePath, 'utf8')) : {}; } catch (e) { }
+    try { metaData = fs.existsSync(metaPath) ? JSON.parse(fs.readFileSync(metaPath, 'utf8')) : {}; } catch (e) { }
 
-    // Load Meta Data
-    if (fs.existsSync(metaPath)) {
-        try {
-            metaData = JSON.parse(fs.readFileSync(metaPath, "utf8"));
-        } catch (e) { console.warn("Meta file corrupted/missing, rebuilding."); }
-    }
+    const highFlat = flattenKeys(highData);
+    const simpleFlat = flattenKeys(simpleData);
 
-    // Helper: Generate Hash
-    const getHash = (text) => crypto.createHash("sha256").update(text || "").digest("hex");
-
-    // 1. Cleanup: Remove Orphan Keys (in Target but not in Source)
-    let removedCount = 0;
-    Object.keys(targetDataFlat).forEach(key => {
-        if (!sourceDataFlat.hasOwnProperty(key)) {
-            delete targetDataFlat[key];
-            delete metaData[key];
-            removedCount++;
-        }
-    });
-
-    // 2. Identify Pending Keys (Missing OR Changed)
+    // 1. Identify Pending Keys
     const pendingKeys = [];
+    let removedCount = 0;
 
+    // Check for modifications or missing keys
     Object.keys(sourceDataFlat).forEach(key => {
         const sourceText = sourceDataFlat[key];
         const sourceHash = getHash(sourceText);
 
-        const isMissing = !targetDataFlat.hasOwnProperty(key);
-        const isChanged = metaData[key] !== sourceHash; // True if hash doesn't match stored hash
+        const isMissingVariable = !highFlat.hasOwnProperty(key) || !simpleFlat.hasOwnProperty(key);
+        const isChanagedVariable = metaData[key] !== sourceHash;
 
-        if (isMissing || isChanged) {
+        if (isMissingVariable || isChanagedVariable) {
             pendingKeys.push(key);
-            // Log reason for clarity
-            if (isChanged && !isMissing) {
-                console.log(`[${targetLang}:${namespace}] Key '${key}' changed. Re-translating.`);
+            if (isChanagedVariable && !isMissingVariable) {
+                console.log(`[${targetLang}] Key '${key}' changed. Re-translating.`);
             }
         }
-
-        // Always update meta to new hash (will be saved at end)
+        // Update hash buffer (will save later)
         metaData[key] = sourceHash;
     });
 
+    // Clean orphans from memory (not saving yet)
+    Object.keys(highFlat).forEach(k => { if (!sourceDataFlat[k]) { delete highFlat[k]; removedCount++; } });
+    Object.keys(simpleFlat).forEach(k => { if (!sourceDataFlat[k]) { delete simpleFlat[k]; } });
+    // Clean orphans from meta
+    Object.keys(metaData).forEach(k => { if (!sourceDataFlat[k]) { delete metaData[k]; } });
+
     if (pendingKeys.length === 0 && removedCount === 0) {
-        console.log(`[${targetLang}:${namespace}] Up to date.`);
-        // Ensure meta is synced even if no translations needed (e.g. if we just rebuilt meta)
-        fs.writeFileSync(metaPath, JSON.stringify(metaData, null, 2));
+        console.log(`[${targetLang}] Up to date.`);
+        // Save meta to ensure consistency
+        fs.writeFileSync(metaPath, JSON.stringify(sortObjectKeys(metaData), null, 2));
         return;
     }
 
-    console.log(`[${targetLang}:${namespace}] Processing ${pendingKeys.length} keys (${removedCount} removed).`);
+    console.log(`[${targetLang}] Processing ${pendingKeys.length} keys (${removedCount} removed).`);
 
-    let newTranslationsFlat = {};
+    // 2. Process Batches
+    let newHigh = {};
+    let newSimple = {};
 
-    // 3. Translate Pending Keys in Batches
     for (let i = 0; i < pendingKeys.length; i += CONFIG.batchSize) {
         const batchKeys = pendingKeys.slice(i, i + CONFIG.batchSize);
+        console.log(`[${targetLang}] Batch ${Math.floor(i / CONFIG.batchSize) + 1}/${Math.ceil(pendingKeys.length / CONFIG.batchSize)}...`);
+
         const batchObj = {};
+        batchKeys.forEach(k => batchObj[k] = sourceDataFlat[k]);
 
-        batchKeys.forEach((key) => {
-            batchObj[key] = sourceDataFlat[key];
-        });
+        const batchUnflat = unflattenKeys(batchObj);
 
-        console.log(
-            `[${targetLang}:${namespace}] Batch ${Math.floor(i / CONFIG.batchSize) + 1}/${Math.ceil(pendingKeys.length / CONFIG.batchSize)}...`
-        );
+        // CALL AI
+        const dualResult = await translateBatchWithRetry(batchUnflat, targetLang);
 
-        const batchObjUnflattened = unflattenKeys(batchObj);
+        if (dualResult) {
+            const dualFlat = flattenKeys(dualResult); // { "key1.high": "...", "key1.simple": "..." }
 
-        // Determine instructions based on namespace
-        const isSimplified = namespace === "simplified";
-        // The Global System prompt is robust enough. We only need to switch the specific language instruction key.
-        // We pass a flag to the function to help it select the right key.
-        const modeFlag = isSimplified ? "SIMPLIFIED_MODE" : "";
+            // Separate into High and Simple arrays
+            // dualResult structure is { key: { high: ..., simple: ... } }
+            // deeply nested keys like nav.home -> { nav: { home: { high: ..., simple: ... } } }
 
-        const translatedBatch = await translateBatchWithRetry(
-            batchObjUnflattened,
-            targetLang,
-            0,
-            null, // Use default model system instruction which contains the master prompt
-            modeFlag
-        );
+            // Proper extraction:
+            // We iterate the batch keys, and look them up in the dualResult
+            // Note: dualResult has the same structure as input, but leaves are objects {high, simple}
 
-        if (translatedBatch) {
-            const flatTranslated = flattenKeys(translatedBatch);
-            Object.assign(newTranslationsFlat, flatTranslated);
+            // Helper to extract leaf value from nested object by dot-path
+            const getValue = (obj, pathStr) => {
+                return pathStr.split('.').reduce((acc, part) => acc && acc[part], obj);
+            };
+
+            batchKeys.forEach(key => {
+                const val = getValue(dualResult, key);
+                if (val && val.high && val.simple) {
+                    newHigh[key] = val.high;
+                    newSimple[key] = val.simple;
+                } else {
+                    console.warn(`[${targetLang}] Missing dual output for key: ${key}`);
+                }
+            });
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Rate limit
+        await new Promise(r => setTimeout(r, 1000));
     }
 
-    // 4. Merge & Save
-    Object.assign(targetDataFlat, newTranslationsFlat);
+    // 3. Merge and Save
+    Object.assign(highFlat, newHigh);
+    Object.assign(simpleFlat, newSimple);
 
-    // Write Translation File
-    const finalData = unflattenKeys(targetDataFlat);
-    const sortedFinalData = sortObjectKeys(finalData);
-    fs.writeFileSync(targetPath, JSON.stringify(sortedFinalData, null, 2));
+    const finalHigh = sortObjectKeys(unflattenKeys(highFlat));
+    const finalSimple = sortObjectKeys(unflattenKeys(simpleFlat));
+    const finalMeta = sortObjectKeys(metaData);
 
-    // Write Meta File (Hashes)
-    // We only keep hashes for keys that exist in the final target data
-    const finalMeta = {};
-    Object.keys(targetDataFlat).forEach(key => {
-        if (metaData[key]) finalMeta[key] = metaData[key];
-    });
-    fs.writeFileSync(metaPath, JSON.stringify(sortObjectKeys(finalMeta), null, 2));
+    fs.writeFileSync(highPath, JSON.stringify(finalHigh, null, 2));
+    fs.writeFileSync(simplePath, JSON.stringify(finalSimple, null, 2));
+    fs.writeFileSync(metaPath, JSON.stringify(finalMeta, null, 2));
 
-    console.log(`[${targetLang}:${namespace}] Sync Complete.`);
+    console.log(`[${targetLang}] Sync Complete.`);
 }
 
 async function main() {
+    console.log("Starting Transcreation Sync (Single-Pass Dual-Mode)...");
+
     const sourcePath = path.join(CONFIG.localesDir, CONFIG.sourceLang, "translation.json");
     if (!fs.existsSync(sourcePath)) {
         console.error(`Source file not found: ${sourcePath}`);
@@ -323,19 +316,14 @@ async function main() {
     const sourceData = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
     const sourceDataFlat = flattenKeys(sourceData);
 
-    console.log("Starting Transcreation Sync...");
     console.log(`Source Language: ${CONFIG.sourceLang}`);
     console.log(`Total Source Keys: ${Object.keys(sourceDataFlat).length}`);
 
-    // Process All Languages matches in CONFIG.targetLangs (including 'hi')
     for (const lang of CONFIG.targetLangs) {
-        // Deep Mode
-        await processLanguage(lang, sourceDataFlat, "translation");
-        // Simplified Mode
-        await processLanguage(lang, sourceDataFlat, "simplified");
+        await syncLanguage(lang, sourceDataFlat);
     }
 
-    console.log("Sync Complete!");
+    console.log("Global Sync Complete!");
 }
 
 main();

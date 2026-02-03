@@ -1,16 +1,16 @@
 {
-  "change_language": "Sprache wählen",
-  "instruction": "Liebe ist keine Übung. Liebe ist selbst die tiefste Meditation. Glaube und Hingabe sind erste Schritte, aber Liebe ist eine höhere Stufe, die nur wenige Glückliche erreichen. In der Liebe werden der Liebende und der Geliebte eins. Es gibt keine Trennung mehr. Der Verstand wird still, der Geist verschwindet. Das nennt man 'Samadhi'.",
+  "change_language": "Sprache auswählen",
+  "instruction": "Liebe ist keine Übung oder Technik. Liebe ist selbst die tiefste meditative Ruhe. Glaube und Hingabe sind wichtig, aber Liebe ist eine höhere Stufe, die nur wenige Glückliche erreichen. In der Liebe werden der Liebende und die geliebte Person eins. Es gibt keine Trennung mehr. Der Verstand wird still, die Gedanken verschwinden. Das nennt man 'Samadhi'.",
   "nav": {
     "home": "Startseite",
     "teachings": "Lehren"
   },
   "subtitle": "Ramashram Satsang (Ch. Sh.)",
   "teachings": {
-    "description": "Beschreibung der Lehren...",
-    "subtitle": "Lehren (Deutscher Untertitel)",
-    "title": "Lehren (Deutscher Titel)"
+    "description": "Hier kommt die Beschreibung der Lehren...",
+    "subtitle": "Untertitel für die Lehren",
+    "title": "Titel für die Lehren"
   },
-  "title": "Höchster Lehrer",
-  "welcome": "Diese Webseite wird im Auftrag des höchsten Lehrers Satya Prakash Ji Maharaj erstellt. Sie ist noch im Aufbau. Die Arbeiten sind noch nicht fertig."
+  "title": "Der höchste Meister",
+  "welcome": "Diese Webseite wird mit dem Segen des höchsten Meisters, Satya Prakash Ji Maharaj, erstellt. Sie ist noch im Aufbau und die Arbeit ist noch nicht abgeschlossen."
 }
